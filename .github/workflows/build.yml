@@ -80,7 +80,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: todoapp-web-svc
+          service: todoapp-web-service
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
@@ -130,6 +130,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: todoapp-was-svc
+          service: todoapp-was-service
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
