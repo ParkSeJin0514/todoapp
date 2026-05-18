@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    h1 { color: #333; }
+    #add-form { display: flex; gap: 8px; margin-bottom: 20px; }
+    #new-todo { flex: 1; padding: 8px; }
+    button { padding: 8px 16px; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    li.done span { text-decoration: line-through; color: #999; }
+  </style>
+</head>
+<body>
+  <h1>📝 Todo List</h1>
+  <form id="add-form">
+    <input id="new-todo" placeholder="할 일을 입력하세요..." required>
+    <button type="submit">추가</button>
+  </form>
+  <ul id="todo-list"></ul>
+
+  <script>
+    const API = '/api/todos';
+
+    async function loadTodos() {
+      const res = await fetch(API);
+      const todos = await res.json();
+      const list = document.getElementById('todo-list');
+      list.innerHTML = '';
+      todos.forEach(t => {
+        const li = document.createElement('li');
+        li.className = t.done ? 'done' : '';
+        li.innerHTML = `
+          <span><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggle(${t.id}, this.checked)"> ${t.title}</span>
+          <button onclick="del(${t.id})">삭제</button>
+        `;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('add-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('new-todo');
+      await fetch(API, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title: input.value})
+      });
+      input.value = '';
+      loadTodos();
+    });
+
+    async function toggle(id, done) {
+      await fetch(`${API}/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({done})
+      });
+      loadTodos();
+    }
+
+    async function del(id) {
+      await fetch(`${API}/${id}`, {method: 'DELETE'});
+      loadTodos();
+    }
+
+    loadTodos();
+  </script>
+</body>
+</html>

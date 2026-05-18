@@ -1,0 +1,94 @@
+name: Build and Push to ECR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'was/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.changes.outputs.web }}
+      was: ${{ steps.changes.outputs.was }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            web:
+              - 'web/**'
+            was:
+              - 'was/**'
+
+  build-web:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push WEB
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: todoapp/web
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$REPOSITORY:latest \
+            web/
+          docker push $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$REPOSITORY:latest
+
+  build-was:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.was == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push WAS
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: todoapp/was
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$REPOSITORY:latest \
+            was/
+          docker push $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$REPOSITORY:latest
