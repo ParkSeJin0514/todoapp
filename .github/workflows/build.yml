@@ -1,4 +1,4 @@
-name: Build and Push to ECR
+name: Build and Deploy
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 
 env:
   AWS_REGION: ap-northeast-2
+  ECS_CLUSTER: psj-project-ecs-cluster
 
 permissions:
   id-token: write
@@ -33,7 +34,7 @@ jobs:
             was:
               - 'was/**'
 
-  build-web:
+  deploy-web:
     needs: detect-changes
     if: needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -51,19 +52,39 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push WEB
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: todoapp/web
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build \
-            -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$REPOSITORY:latest \
-            web/
+          docker build -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG web/
           docker push $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-  build-was:
+      - name: Download current Task Definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition todoapp-web \
+            --query taskDefinition > web-task-def.json
+
+      - name: Render new Task Definition with image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: web-task-def.json
+          container-name: web
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: todoapp-web-svc
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+  deploy-was:
     needs: detect-changes
     if: needs.detect-changes.outputs.was == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -81,14 +102,34 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push WAS
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: todoapp/was
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build \
-            -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$REPOSITORY:latest \
-            was/
+          docker build -t $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG was/
           docker push $ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Download current Task Definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition todoapp-was \
+            --query taskDefinition > was-task-def.json
+
+      - name: Render new Task Definition with image
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: was-task-def.json
+          container-name: was
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+          service: todoapp-was-svc
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
