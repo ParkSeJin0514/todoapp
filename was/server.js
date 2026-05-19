@@ -80,11 +80,11 @@ async function initDB(retries = 30) {
   throw new Error('DB connection failed after retries');
 }
 
-app.get('/api/health', (req, res) => {
+app.get('/todoapp/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/todos', async (req, res) => {
+app.get('/todoapp/api/todos', async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM todos ORDER BY id DESC');
     res.json(rows);
@@ -93,7 +93,7 @@ app.get('/api/todos', async (req, res) => {
   }
 });
 
-app.post('/api/todos', async (req, res) => {
+app.post('/todoapp/api/todos', async (req, res) => {
   try {
     const { title } = req.body;
     const [result] = await pool.execute('INSERT INTO todos (title) VALUES (?)', [title]);
@@ -103,7 +103,7 @@ app.post('/api/todos', async (req, res) => {
   }
 });
 
-app.put('/api/todos/:id', async (req, res) => {
+app.put('/todoapp/api/todos/:id', async (req, res) => {
   try {
     await pool.execute('UPDATE todos SET done = ? WHERE id = ?', [req.body.done, req.params.id]);
     res.json({ success: true });
@@ -112,7 +112,7 @@ app.put('/api/todos/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/todos/:id', async (req, res) => {
+app.delete('/todoapp/api/todos/:id', async (req, res) => {
   try {
     await pool.execute('DELETE FROM todos WHERE id = ?', [req.params.id]);
     res.json({ success: true });
