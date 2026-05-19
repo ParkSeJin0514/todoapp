@@ -1,5 +1,5 @@
 // ALB URL을 환경에 맞게 교체하세요
-const APP_URL = 'http://psj-project-alb-959764673.ap-northeast-2.elb.amazonaws.com';
+const APP_URL = 'https://app.psj0514.site';
 
 document.querySelectorAll('#start-btn, #hero-start-btn, #cta-btn').forEach(btn => {
   btn.href = APP_URL;
