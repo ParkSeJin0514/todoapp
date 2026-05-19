@@ -1,7 +1,24 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const promBundle = require('express-prom-bundle');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  includeStatusCode: true,
+  includeUp: true,
+  customLabels: {
+    app: 'todoapp',
+    component: 'was'
+  },
+  promClient: {
+    collectDefaultMetrics: {}
+  }
+});
+app.use(metricsMiddleware);
 
 app.use(express.json());
 
