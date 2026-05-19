@@ -18,7 +18,7 @@ app.use(morgan((tokens, req, res) => {
     component: 'web'
   });
 }, {
-  skip: (req) => req.url === '/metrics'
+  skip: (req) => req.url === '/todoapp/' || req.url === '/metrics'
 }));
 
 const metricsMiddleware = promBundle({
