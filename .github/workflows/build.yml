@@ -6,12 +6,15 @@ on:
     paths:
       - 'web/**'
       - 'was/**'
+      - 'landing/**'
       - '.github/workflows/**'
   workflow_dispatch:
 
 env:
   AWS_REGION: ap-northeast-2
   ECS_CLUSTER: psj-project-ecs-cluster
+  LANDING_BUCKET: ${{ secrets.LANDING_S3_BUCKET }}
+  CF_DISTRIBUTION: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
 
 permissions:
   id-token: write
@@ -36,6 +39,31 @@ jobs:
               - 'was/**'
             landing:
               - 'landing/**'
+  deploy-landing:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.landing == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Upload to S3
+        run: |
+          aws s3 sync landing/ s3://${{ env.LANDING_BUCKET }}/ \
+            --delete \
+            --cache-control "max-age=86400"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ env.CF_DISTRIBUTION }} \
+            --paths "/*"
+
   deploy-web:
     needs: detect-changes
     if: needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
