@@ -2,72 +2,347 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Todo List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmileShark Todo</title>
   <style>
-    body { font-family: -apple-system, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-    h1 { color: #333; }
-    #add-form { display: flex; gap: 8px; margin-bottom: 20px; }
-    #new-todo { flex: 1; padding: 8px; }
-    button { padding: 8px 16px; cursor: pointer; }
-    ul { list-style: none; padding: 0; }
-    li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-    li.done span { text-decoration: line-through; color: #999; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: white;
+      padding: 28px 24px 20px;
+      box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .header-top h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .header-sub {
+      font-size: 0.82rem;
+      opacity: 0.85;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .container {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      overflow: hidden;
+    }
+
+    .add-section {
+      padding: 16px;
+      border-bottom: 1px solid #e8f4f8;
+    }
+
+    #add-form {
+      display: flex;
+      gap: 8px;
+    }
+
+    #new-todo {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    #new-todo:focus {
+      border-color: #00b4d8;
+    }
+
+    #add-form button {
+      padding: 10px 18px;
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    #add-form button:hover { opacity: 0.9; }
+    #add-form button:active { transform: scale(0.97); }
+
+    .stats-bar {
+      padding: 10px 16px;
+      background: #f8fcff;
+      border-bottom: 1px solid #e8f4f8;
+      font-size: 0.82rem;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stats-bar .count {
+      font-weight: 700;
+      color: #0077b6;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 5px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-left: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0077b6, #00b4d8);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    #todo-list {
+      list-style: none;
+      min-height: 60px;
+    }
+
+    #todo-list li {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideIn 0.25s ease;
+      transition: background 0.15s;
+    }
+
+    #todo-list li:last-child { border-bottom: none; }
+    #todo-list li:hover { background: #f8fcff; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(20px); }
+    }
+
+    .todo-check {
+      width: 20px;
+      height: 20px;
+      accent-color: #00b4d8;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .todo-title {
+      flex: 1;
+      font-size: 0.95rem;
+      color: #1e293b;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    li.done .todo-title {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+
+    .del-btn {
+      padding: 4px 10px;
+      background: transparent;
+      color: #cbd5e1;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .del-btn:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    .empty-state .shark {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 12px;
+      animation: bounce 1.8s ease-in-out infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+
+    .empty-state p {
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .empty-state .hint {
+      font-size: 0.8rem;
+      margin-top: 6px;
+      color: #b0bec5;
+    }
   </style>
 </head>
 <body>
-  <h1>📝 Todo List</h1>
-  <form id="add-form">
-    <input id="new-todo" placeholder="할 일을 입력하고 자랑해보세요." required>
-    <button type="submit">추가</button>
-  </form>
-  <ul id="todo-list"></ul>
 
-  <script>
-    const API = '/api/todos';
+<header>
+  <div class="header-top">
+    <span style="font-size:1.5rem">🦈</span>
+    <h1>SmileShark Todo</h1>
+  </div>
+  <div class="header-sub">
+    <span id="datetime"></span>
+  </div>
+</header>
 
-    async function loadTodos() {
-      const res = await fetch(API);
-      const todos = await res.json();
-      const list = document.getElementById('todo-list');
-      list.innerHTML = '';
-      todos.forEach(t => {
-        const li = document.createElement('li');
-        li.className = t.done ? 'done' : '';
-        li.innerHTML = `
-          <span><input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggle(${t.id}, this.checked)"> ${t.title}</span>
-          <button onclick="del(${t.id})">삭제</button>
-        `;
-        list.appendChild(li);
-      });
+<div class="container">
+  <div class="card">
+    <div class="add-section">
+      <form id="add-form">
+        <input id="new-todo" placeholder="오늘 할 일을 입력하세요" required>
+        <button type="submit">+ 추가</button>
+      </form>
+    </div>
+
+    <div class="stats-bar">
+      <span id="stats-text">불러오는 중...</span>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <ul id="todo-list"></ul>
+  </div>
+</div>
+
+<script>
+  const API = '/api/todos';
+
+  function updateDatetime() {
+    const now = new Date();
+    const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
+    document.getElementById('datetime').textContent = now.toLocaleString('ko-KR', opts);
+  }
+  updateDatetime();
+  setInterval(updateDatetime, 10000);
+
+  function updateStats(todos) {
+    const total = todos.length;
+    const done  = todos.filter(t => t.done).length;
+    const pct   = total > 0 ? Math.round(done / total * 100) : 0;
+    document.getElementById('stats-text').innerHTML =
+      `완료 <span class="count">${done}</span> / ${total}개 &nbsp;·&nbsp; ${pct}%`;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  async function loadTodos() {
+    const res   = await fetch(API);
+    const todos = await res.json();
+    const list  = document.getElementById('todo-list');
+    list.innerHTML = '';
+
+    if (todos.length === 0) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <span class="shark">🦈</span>
+          <p>할 일이 없어요!<br>위에서 새 할 일을 추가해보세요.</p>
+          <p class="hint">SmileShark가 응원합니다 🎉</p>
+        </div>`;
+      updateStats([]);
+      return;
     }
 
-    document.getElementById('add-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('new-todo');
-      await fetch(API, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({title: input.value})
-      });
-      input.value = '';
-      loadTodos();
+    todos.forEach(t => {
+      const li = document.createElement('li');
+      li.className = t.done ? 'done' : '';
+      li.dataset.id = t.id;
+      li.innerHTML = `
+        <input class="todo-check" type="checkbox" ${t.done ? 'checked' : ''}
+               onchange="toggle(${t.id}, this.checked)">
+        <span class="todo-title">${escHtml(t.title)}</span>
+        <button class="del-btn" onclick="del(${t.id}, this)">삭제</button>
+      `;
+      list.appendChild(li);
     });
 
-    async function toggle(id, done) {
-      await fetch(`${API}/${id}`, {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({done})
-      });
-      loadTodos();
-    }
+    updateStats(todos);
+  }
 
-    async function del(id) {
-      await fetch(`${API}/${id}`, {method: 'DELETE'});
-      loadTodos();
-    }
-
+  document.getElementById('add-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('new-todo');
+    const title = input.value.trim();
+    if (!title) return;
+    await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    input.value = '';
     loadTodos();
-  </script>
+  });
+
+  async function toggle(id, done) {
+    await fetch(`${API}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done })
+    });
+    loadTodos();
+  }
+
+  async function del(id, btn) {
+    const li = btn.closest('li');
+    li.style.animation = 'fadeOut 0.2s ease forwards';
+    await new Promise(r => setTimeout(r, 180));
+    await fetch(`${API}/${id}`, { method: 'DELETE' });
+    loadTodos();
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  loadTodos();
+</script>
 </body>
 </html>
