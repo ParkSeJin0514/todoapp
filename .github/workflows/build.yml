@@ -23,6 +23,7 @@ jobs:
     outputs:
       web: ${{ steps.changes.outputs.web }}
       was: ${{ steps.changes.outputs.was }}
+      landing: ${{ steps.changes.outputs.landing }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -33,7 +34,8 @@ jobs:
               - 'web/**'
             was:
               - 'was/**'
-
+            landing:
+              - 'landing/**'
   deploy-web:
     needs: detect-changes
     if: needs.detect-changes.outputs.web == 'true' || github.event_name == 'workflow_dispatch'
