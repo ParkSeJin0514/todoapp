@@ -1,9 +1,25 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const morgan = require('morgan');
 const promBundle = require('express-prom-bundle');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+app.use(morgan((tokens, req, res) => {
+  return JSON.stringify({
+    timestamp: new Date().toISOString(),
+    method: tokens.method(req, res),
+    path: tokens.url(req, res),
+    status: parseInt(tokens.status(req, res), 10) || 0,
+    duration_ms: parseFloat(tokens['response-time'](req, res)) || 0,
+    content_length: parseInt(tokens.res(req, res, 'content-length') || 0, 10),
+    user_agent: tokens['user-agent'](req, res),
+    component: 'was'
+  });
+}, {
+  skip: (req) => req.url === '/api/health' || req.url === '/metrics'
+}));
 
 const metricsMiddleware = promBundle({
   includeMethod: true,
