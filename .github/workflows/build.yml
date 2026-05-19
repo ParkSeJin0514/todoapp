@@ -52,11 +52,21 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Inject cache busting version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          sed -i "s/?v=[^\"']*/?v=$SHORT_SHA/g" landing/index.html
+
       - name: Upload to S3
         run: |
           aws s3 sync landing/ s3://${{ env.LANDING_BUCKET }}/ \
             --delete \
+            --exclude "*.html" \
             --cache-control "max-age=86400"
+          aws s3 sync landing/ s3://${{ env.LANDING_BUCKET }}/ \
+            --exclude "*" \
+            --include "*.html" \
+            --cache-control "no-cache, no-store, must-revalidate"
 
       - name: Invalidate CloudFront cache
         run: |
