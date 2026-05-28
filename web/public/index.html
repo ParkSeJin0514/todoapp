@@ -388,21 +388,32 @@
   // 로그인: Cognito Hosted UI로 리다이렉트 (Authorization Code + PKCE)
   async function login() {
     const verifier = randomString(64);
+    const state = randomString(32);
     sessionStorage.setItem('pkce_verifier', verifier);
+    sessionStorage.setItem('oauth_state', state);
     const challenge = base64url(await sha256(verifier));
     window.location.href = `${COGNITO.domain}/oauth2/authorize?response_type=code`
       + `&client_id=${COGNITO.clientId}`
       + `&redirect_uri=${encodeURIComponent(COGNITO.redirectUri)}`
       + `&scope=${encodeURIComponent(COGNITO.scope)}`
+      + `&state=${state}`
       + `&code_challenge=${challenge}&code_challenge_method=S256`;
   }
 
   // 콜백: 인가 코드를 토큰으로 교환
   async function handleCallback() {
-    const code = new URLSearchParams(window.location.search).get('code');
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
     if (!code) return false;
     const verifier = sessionStorage.getItem('pkce_verifier');
+    const savedState = sessionStorage.getItem('oauth_state');
+    sessionStorage.removeItem('oauth_state');
     if (!verifier) return false;
+    // CSRF 방어: 돌아온 state가 로그인 시작 때 저장한 값과 일치해야 함
+    if (!savedState || params.get('state') !== savedState) {
+      console.error('state 불일치 — CSRF 의심으로 로그인 중단');
+      return false;
+    }
     const res = await fetch(`${COGNITO.domain}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
