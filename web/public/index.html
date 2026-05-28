@@ -314,24 +314,7 @@
       <p>로그인하여 할 일을 관리하세요</p>
     </div>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">로그인</button>
-      <button class="auth-tab" data-tab="register" onclick="switchTab('register')">회원가입</button>
-    </div>
-
-    <div id="auth-error" class="auth-error" style="display:none"></div>
-
-    <form id="login-form" class="auth-form">
-      <input id="login-username" type="text" placeholder="아이디" autocomplete="username" required>
-      <input id="login-password" type="password" placeholder="비밀번호" autocomplete="current-password" required>
-      <button type="submit">로그인</button>
-    </form>
-
-    <form id="register-form" class="auth-form" style="display:none">
-      <input id="reg-username" type="text" placeholder="아이디 (3~50자)" autocomplete="username" required>
-      <input id="reg-password" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="new-password" required>
-      <button type="submit">회원가입</button>
-    </form>
+    <button onclick="login()" style="width:100%;padding:13px;background:linear-gradient(135deg,#0077b6,#00b4d8);color:#fff;border:none;border-radius:10px;font-size:0.98rem;font-weight:600;cursor:pointer;">로그인 / 회원가입</button>
   </div>
 </div>
 
@@ -373,24 +356,86 @@
 </div>
 
 <script>
-  // ── Auth helpers ──
-  function getToken()    { return localStorage.getItem('token'); }
-  function getUsername() { return localStorage.getItem('username'); }
+  // ── Cognito 설정 ──
+  const COGNITO = {
+    domain: 'https://ap-northeast-2q1k9fluel.auth.ap-northeast-2.amazoncognito.com',
+    clientId: '2k8ltduq6m6n5eq01kcsaib48b',
+    redirectUri: window.location.origin + '/todoapp/',
+    scope: 'openid email'
+  };
 
-  function setAuth(token, username) {
-    localStorage.setItem('token', token);
-    localStorage.setItem('username', username);
+  // ── PKCE 헬퍼 ──
+  function base64url(bytes) {
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function randomString(len) {
+    const arr = new Uint8Array(len);
+    crypto.getRandomValues(arr);
+    return base64url(arr);
+  }
+  async function sha256(str) {
+    return new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)));
   }
 
+  // ── 토큰 ──
+  function getToken() { return localStorage.getItem('access_token'); }
+  function getUsername() {
+    const idt = localStorage.getItem('id_token');
+    if (!idt) return '사용자';
+    try { return JSON.parse(atob(idt.split('.')[1])).email || '사용자'; } catch { return '사용자'; }
+  }
+
+  // 로그인: Cognito Hosted UI로 리다이렉트 (Authorization Code + PKCE)
+  async function login() {
+    const verifier = randomString(64);
+    sessionStorage.setItem('pkce_verifier', verifier);
+    const challenge = base64url(await sha256(verifier));
+    window.location.href = `${COGNITO.domain}/oauth2/authorize?response_type=code`
+      + `&client_id=${COGNITO.clientId}`
+      + `&redirect_uri=${encodeURIComponent(COGNITO.redirectUri)}`
+      + `&scope=${encodeURIComponent(COGNITO.scope)}`
+      + `&code_challenge=${challenge}&code_challenge_method=S256`;
+  }
+
+  // 콜백: 인가 코드를 토큰으로 교환
+  async function handleCallback() {
+    const code = new URLSearchParams(window.location.search).get('code');
+    if (!code) return false;
+    const verifier = sessionStorage.getItem('pkce_verifier');
+    if (!verifier) return false;
+    const res = await fetch(`${COGNITO.domain}/oauth2/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: COGNITO.clientId,
+        code,
+        redirect_uri: COGNITO.redirectUri,
+        code_verifier: verifier
+      })
+    });
+    sessionStorage.removeItem('pkce_verifier');
+    if (!res.ok) return false;
+    const t = await res.json();
+    localStorage.setItem('access_token', t.access_token);
+    localStorage.setItem('id_token', t.id_token);
+    if (t.refresh_token) localStorage.setItem('refresh_token', t.refresh_token);
+    window.history.replaceState({}, '', COGNITO.redirectUri);
+    return true;
+  }
+
+  // 로그아웃: 토큰 삭제 + Cognito 세션 종료
   function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('id_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = `${COGNITO.domain}/logout?client_id=${COGNITO.clientId}`
+      + `&logout_uri=${encodeURIComponent(COGNITO.redirectUri)}`;
+  }
+
+  function showLogin() {
     document.getElementById('app').style.display = 'none';
     document.getElementById('auth-overlay').style.display = 'flex';
-    document.getElementById('auth-error').style.display = 'none';
-    document.getElementById('login-username').value = '';
-    document.getElementById('login-password').value = '';
-    switchTab('login');
   }
 
   function showApp() {
@@ -400,22 +445,7 @@
     loadTodos();
   }
 
-  function showAuthError(msg) {
-    const el = document.getElementById('auth-error');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  function switchTab(tab) {
-    document.querySelectorAll('.auth-tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === tab);
-    });
-    document.getElementById('login-form').style.display    = tab === 'login'    ? 'flex' : 'none';
-    document.getElementById('register-form').style.display = tab === 'register' ? 'flex' : 'none';
-    document.getElementById('auth-error').style.display = 'none';
-  }
-
-  // API 요청에 토큰 자동 첨부, 401 시 로그아웃
+  // API 요청에 토큰 자동 첨부, 401 시 로그인 화면으로
   async function apiFetch(url, options = {}) {
     const res = await fetch(url, {
       ...options,
@@ -426,46 +456,13 @@
       }
     });
     if (res.status === 401) {
-      logout();
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('id_token');
+      showLogin();
       return null;
     }
     return res;
   }
-
-  // ── Auth forms ──
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value;
-
-    const res = await fetch('/todoapp/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-
-    if (!res.ok) { showAuthError(data.error); return; }
-    setAuth(data.token, data.username);
-    showApp();
-  });
-
-  document.getElementById('register-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('reg-username').value.trim();
-    const password = document.getElementById('reg-password').value;
-
-    const res = await fetch('/todoapp/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    const data = await res.json();
-
-    if (!res.ok) { showAuthError(data.error); return; }
-    setAuth(data.token, data.username);
-    showApp();
-  });
 
   // ── Todo logic ──
   const API = '/todoapp/api/todos';
@@ -556,9 +553,13 @@
   updateDatetime();
   setInterval(updateDatetime, 10000);
 
-  if (getToken()) {
-    showApp();
-  }
+  (async () => {
+    if (window.location.search.includes('code=')) {
+      if (await handleCallback()) { showApp(); return; }
+    }
+    if (getToken()) showApp();
+    else showLogin();
+  })();
 </script>
 </body>
 </html>
