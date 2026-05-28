@@ -13,6 +13,108 @@
       min-height: 100vh;
     }
 
+    /* ── Auth overlay ── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      padding: 36px 32px 32px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .auth-brand {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .auth-brand .shark { font-size: 2.4rem; display: block; margin-bottom: 6px; }
+    .auth-brand h2 { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
+    .auth-brand p { font-size: 0.8rem; color: #94a3b8; margin-top: 3px; }
+
+    .auth-tabs {
+      display: flex;
+      border-radius: 10px;
+      background: #f1f5f9;
+      padding: 4px;
+      margin-bottom: 20px;
+      gap: 4px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab.active {
+      background: white;
+      color: #0077b6;
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .auth-form input {
+      padding: 11px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .auth-form input:focus { border-color: #00b4d8; }
+
+    .auth-form button {
+      padding: 12px;
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .auth-form button:hover { opacity: 0.9; }
+    .auth-form button:active { transform: scale(0.98); }
+
+    .auth-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    /* ── App ── */
     header {
       background: linear-gradient(135deg, #0077b6, #00b4d8);
       color: white;
@@ -27,18 +129,28 @@
       margin-bottom: 6px;
     }
 
-    .header-top h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
+    .header-top h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.3px; }
 
     .header-sub {
       font-size: 0.82rem;
       opacity: 0.85;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover { background: rgba(255, 255, 255, 0.3); }
 
     .container {
       max-width: 580px;
@@ -58,10 +170,7 @@
       border-bottom: 1px solid #e8f4f8;
     }
 
-    #add-form {
-      display: flex;
-      gap: 8px;
-    }
+    #add-form { display: flex; gap: 8px; }
 
     #new-todo {
       flex: 1;
@@ -73,9 +182,7 @@
       outline: none;
     }
 
-    #new-todo:focus {
-      border-color: #00b4d8;
-    }
+    #new-todo:focus { border-color: #00b4d8; }
 
     #add-form button {
       padding: 10px 18px;
@@ -104,10 +211,7 @@
       gap: 6px;
     }
 
-    .stats-bar .count {
-      font-weight: 700;
-      color: #0077b6;
-    }
+    .stats-bar .count { font-weight: 700; color: #0077b6; }
 
     .progress-bar {
       flex: 1;
@@ -125,10 +229,7 @@
       transition: width 0.4s ease;
     }
 
-    #todo-list {
-      list-style: none;
-      min-height: 60px;
-    }
+    #todo-list { list-style: none; min-height: 60px; }
 
     #todo-list li {
       padding: 14px 16px;
@@ -169,10 +270,7 @@
       transition: color 0.2s;
     }
 
-    li.done .todo-title {
-      text-decoration: line-through;
-      color: #94a3b8;
-    }
+    li.done .todo-title { text-decoration: line-through; color: #94a3b8; }
 
     .del-btn {
       padding: 4px 10px;
@@ -186,18 +284,9 @@
       flex-shrink: 0;
     }
 
-    .del-btn:hover {
-      background: #fee2e2;
-      color: #ef4444;
-      border-color: #fca5a5;
-    }
+    .del-btn:hover { background: #fee2e2; color: #ef4444; border-color: #fca5a5; }
 
-    .empty-state {
-      padding: 48px 24px;
-      text-align: center;
-      color: #94a3b8;
-    }
-
+    .empty-state { padding: 48px 24px; text-align: center; color: #94a3b8; }
     .empty-state .shark {
       font-size: 3rem;
       display: block;
@@ -210,51 +299,175 @@
       50%       { transform: translateY(-8px); }
     }
 
-    .empty-state p {
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    .empty-state .hint {
-      font-size: 0.8rem;
-      margin-top: 6px;
-      color: #b0bec5;
-    }
+    .empty-state p { font-size: 0.95rem; line-height: 1.6; }
+    .empty-state .hint { font-size: 0.8rem; margin-top: 6px; color: #b0bec5; }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <span style="font-size:1.5rem">🦈</span>
-    <h1>SmileShark Todo</h1>
-  </div>
-  <div class="header-sub">
-    <span id="datetime"></span>
-  </div>
-</header>
-
-<div class="container">
-  <div class="card">
-    <div class="add-section">
-      <form id="add-form">
-        <input id="new-todo" placeholder="오늘 할 일을 입력하세요" required>
-        <button type="submit">+ 추가</button>
-      </form>
+<!-- 인증 화면 -->
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <span class="shark">🦈</span>
+      <h2>SmileShark Todo</h2>
+      <p>로그인하여 할 일을 관리하세요</p>
     </div>
 
-    <div class="stats-bar">
-      <span id="stats-text">불러오는 중...</span>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">로그인</button>
+      <button class="auth-tab" data-tab="register" onclick="switchTab('register')">회원가입</button>
+    </div>
+
+    <div id="auth-error" class="auth-error" style="display:none"></div>
+
+    <form id="login-form" class="auth-form">
+      <input id="login-username" type="text" placeholder="아이디" autocomplete="username" required>
+      <input id="login-password" type="password" placeholder="비밀번호" autocomplete="current-password" required>
+      <button type="submit">로그인</button>
+    </form>
+
+    <form id="register-form" class="auth-form" style="display:none">
+      <input id="reg-username" type="text" placeholder="아이디 (3~50자)" autocomplete="username" required>
+      <input id="reg-password" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="new-password" required>
+      <button type="submit">회원가입</button>
+    </form>
+  </div>
+</div>
+
+<!-- 메인 앱 -->
+<div id="app" style="display:none">
+  <header>
+    <div class="header-top">
+      <span style="font-size:1.5rem">🦈</span>
+      <h1>SmileShark Todo</h1>
+    </div>
+    <div class="header-sub">
+      <span id="datetime"></span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="welcome-user" style="opacity:0.9"></span>
+        <button class="logout-btn" onclick="logout()">로그아웃</button>
       </div>
     </div>
+  </header>
 
-    <ul id="todo-list"></ul>
+  <div class="container">
+    <div class="card">
+      <div class="add-section">
+        <form id="add-form">
+          <input id="new-todo" placeholder="오늘 할 일을 입력하세요" required>
+          <button type="submit">+ 추가</button>
+        </form>
+      </div>
+
+      <div class="stats-bar">
+        <span id="stats-text">불러오는 중...</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <ul id="todo-list"></ul>
+    </div>
   </div>
 </div>
 
 <script>
+  // ── Auth helpers ──
+  function getToken()    { return localStorage.getItem('token'); }
+  function getUsername() { return localStorage.getItem('username'); }
+
+  function setAuth(token, username) {
+    localStorage.setItem('token', token);
+    localStorage.setItem('username', username);
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('auth-error').style.display = 'none';
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    switchTab('login');
+  }
+
+  function showApp() {
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('welcome-user').textContent = getUsername() + '님';
+    loadTodos();
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.getElementById('login-form').style.display    = tab === 'login'    ? 'flex' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'flex' : 'none';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  // API 요청에 토큰 자동 첨부, 401 시 로그아웃
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`,
+        ...(options.headers || {})
+      }
+    });
+    if (res.status === 401) {
+      logout();
+      return null;
+    }
+    return res;
+  }
+
+  // ── Auth forms ──
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    const res = await fetch('/todoapp/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) { showAuthError(data.error); return; }
+    setAuth(data.token, data.username);
+    showApp();
+  });
+
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('reg-username').value.trim();
+    const password = document.getElementById('reg-password').value;
+
+    const res = await fetch('/todoapp/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) { showAuthError(data.error); return; }
+    setAuth(data.token, data.username);
+    showApp();
+  });
+
+  // ── Todo logic ──
   const API = '/todoapp/api/todos';
 
   function updateDatetime() {
@@ -262,8 +475,6 @@
     const opts = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit' };
     document.getElementById('datetime').textContent = now.toLocaleString('ko-KR', opts);
   }
-  updateDatetime();
-  setInterval(updateDatetime, 10000);
 
   function updateStats(todos) {
     const total = todos.length;
@@ -275,7 +486,8 @@
   }
 
   async function loadTodos() {
-    const res   = await fetch(API);
+    const res = await apiFetch(API);
+    if (!res) return;
     const todos = await res.json();
     const list  = document.getElementById('todo-list');
     list.innerHTML = '';
@@ -312,9 +524,8 @@
     const input = document.getElementById('new-todo');
     const title = input.value.trim();
     if (!title) return;
-    await fetch(API, {
+    await apiFetch(API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title })
     });
     input.value = '';
@@ -322,9 +533,8 @@
   });
 
   async function toggle(id, done) {
-    await fetch(`${API}/${id}`, {
+    await apiFetch(`${API}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ done })
     });
     loadTodos();
@@ -334,7 +544,7 @@
     const li = btn.closest('li');
     li.style.animation = 'fadeOut 0.2s ease forwards';
     await new Promise(r => setTimeout(r, 180));
-    await fetch(`${API}/${id}`, { method: 'DELETE' });
+    await apiFetch(`${API}/${id}`, { method: 'DELETE' });
     loadTodos();
   }
 
@@ -342,7 +552,13 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  loadTodos();
+  // ── Init ──
+  updateDatetime();
+  setInterval(updateDatetime, 10000);
+
+  if (getToken()) {
+    showApp();
+  }
 </script>
 </body>
 </html>
