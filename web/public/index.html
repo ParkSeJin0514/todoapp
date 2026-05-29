@@ -361,6 +361,7 @@
     domain: 'https://ap-northeast-2q1k9fluel.auth.ap-northeast-2.amazoncognito.com',
     clientId: '2k8ltduq6m6n5eq01kcsaib48b',
     redirectUri: window.location.origin + '/todoapp/',
+    signOutUri: window.location.origin + '/',
     scope: 'openid email'
   };
 
@@ -441,7 +442,7 @@
     localStorage.removeItem('id_token');
     localStorage.removeItem('refresh_token');
     window.location.href = `${COGNITO.domain}/logout?client_id=${COGNITO.clientId}`
-      + `&logout_uri=${encodeURIComponent(COGNITO.redirectUri)}`;
+      + `&logout_uri=${encodeURIComponent(COGNITO.signOutUri)}`;
   }
 
   function showLogin() {
