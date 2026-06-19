@@ -1,0 +1,8 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo "pipeline test - hello world"
+      - echo "현재 시각:" `date`
+      - ls -al
